@@ -1,0 +1,77 @@
+name: Build LiveCaptionN with Indonesian (MIT fork)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ 'id-free' ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Create offline placeholder google-services.json
+        run: |
+          mkdir -p app
+          cat > app/google-services.json <<'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "lcn-id-fork",
+              "storage_bucket": "lcn-id-fork.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": { "package_name": "com.charles.livecaptionn" }
+                },
+                "oauth_client": [],
+                "api_key": [ { "current_key": "ci-placeholder" } ],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+
+      - name: Create local.properties (no ads, no remote premium)
+        run: |
+          cat > local.properties <<'EOF'
+          sdk.dir=/usr/local/lib/android/sdk
+          translate.url=http://localhost:3006
+          stt.url=http://localhost:9000/asr?output=json
+          ads.enabled=false
+          premium.worker.url=
+          premium.stripe.price.ad_free=
+          premium.stripe.price.pro=
+          EOF
+
+      - name: Build debug APK (github flavor)
+        run: ./gradlew assembleGithubDebug --no-daemon --stacktrace
+
+      - name: Verify APK exists
+        run: test -f app/build/outputs/apk/github/debug/app-github-debug.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiveCaptionN-ID
+          path: app/build/outputs/apk/github/debug/app-github-debug.apk
+          if-no-files-found: error
