@@ -81,7 +81,8 @@ object MlKitLanguages {
      * the underlying ML Kit repository stay fully ungated.
      */
     val FREE_TIER: Set<String> = setOf(
-        "en", "es", "fr", "de", "it", "pt", "nl", "ru", "zh", "ja", "ko", "ar", "hi", "vi", "tr"
+        "en", "es", "fr", "de", "it", "pt", "nl", "ru", "zh", "ja", "ko", "ar", "hi", "vi", "tr",
+        "id" // Indonesian: unlocked in this MIT-licensed fork
     )
 
     fun requiresPro(code: String): Boolean = code.trim().lowercase() !in FREE_TIER
